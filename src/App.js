@@ -4,7 +4,7 @@ import Board from './Board.jsx';
 function App() {
   return (
     <div className="App">
-      <Board rows={5} columns={5} mines={5} />
+      <Board rows={10} columns={10} mines={20} />
     </div>
   );
 }

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Typography, Grid, Box } from '@mui/material';
+import { Button, Typography, Grid } from '@mui/material';
+import Cell from './Cell';
 
 const cellType = {
   UNKNOWN_CELL: 'c',
   BOMB_CELL: 'b',
-  REVEALED_CELL: ''
+  REVEALED_CELL: 'r'
 };
 
 const Board = ({ rows, columns, mines }) => {
@@ -18,7 +19,6 @@ const Board = ({ rows, columns, mines }) => {
     [0, -1], [0, 1],
     [1, -1], [1, 0], [1, 1]
   ];
-
 
   const initBoard = (rows, columns, mines) => {
     const initialBoard = Array(rows)
@@ -66,8 +66,13 @@ const Board = ({ rows, columns, mines }) => {
     neighbors.map(([x, y]) => {
       const newRow = row + x;
       const newCol = col + y;
-      if ( newRow >= 0 && newRow < rows && newCol >= 0 && newCol < columns && 
-        newBoard[newRow][newCol] === cellType.UNKNOWN_CELL) {
+      if (
+        newRow >= 0 &&
+        newRow < rows &&
+        newCol >= 0 &&
+        newCol < columns &&
+        newBoard[newRow][newCol] === cellType.UNKNOWN_CELL
+      ) {
         const count = countBombAroundCell(newBoard, newRow, newCol);
         newBoard[newRow][newCol] = count === 0 ? cellType.REVEALED_CELL : count;
         remove++;
@@ -77,7 +82,7 @@ const Board = ({ rows, columns, mines }) => {
     setCellCounterReveal(cellCounterReveal - remove);
     setBoard(newBoard);
   };
-  
+
   const handleCellClick = (rowIndex, colIndex) => {
     const cell = board[rowIndex][colIndex];
     if (cell === cellType.BOMB_CELL) {
@@ -87,10 +92,9 @@ const Board = ({ rows, columns, mines }) => {
     }
   };
 
-
   useEffect(() => {
-    if( cellCounterReveal === 0 ) {
-        setWin(true);
+    if (cellCounterReveal === 0) {
+      setWin(true);
     }
     if (isGameOver || reset) {
       initBoard(rows, columns, mines);
@@ -102,41 +106,36 @@ const Board = ({ rows, columns, mines }) => {
   }, [cellCounterReveal, columns, isGameOver, mines, reset, rows]);
 
   return (
-    <Grid container direction="column">
-      <Typography variant="h2" color="red">
+    <Grid container direction="column" justifyContent="center" alignItems="center">
+      <Typography variant="h2" className="game-label" fontWeight="bold">
         Minesweeper Game
-      </Typography><br />
+      </Typography>
+      <br />
       {board.map((row, rowIndex) => (
         <Grid container item key={rowIndex} className="table" justifyContent="center" alignItems="center">
           {row.map((cell, colIndex) => (
-            <Grid item key={colIndex} >
-              <Button variant="contained" color={cell === cellType.REVEALED_CELL || cell > 0 ? 'inherit' : 'info'}
-                className="cell" display="flex" height="5vh" disabled={isGameOver || win}
-                onClick={() => handleCellClick(rowIndex, colIndex)}
-              >
-                <Box display="flex" height="5vh">
-                  <span style={{ fontSize: '1.5rem' }}>
-                    {cell > 0 ? (cell) : (cell === cellType.REVEALED_CELL ? ('') : ('💀'))}
-                  </span>
-                </Box>
-              </Button>
-            </Grid>
+            <Cell key={colIndex} value={cell} onClick={() => handleCellClick(rowIndex, colIndex)} />
           ))}
         </Grid>
       ))}
       <br />
       {win && <Typography className="game-over">You Win!</Typography>}
-      {isGameOver && <Typography className="game-over">{ alert('Game Over !') }</Typography> &&
+      {isGameOver && (
+        <Typography className="game-over">
+          {alert("Game Over")}
+        </Typography>
+      ) && (
         <Button variant="contained" color="primary" className="restart" onClick={() => setIsGameOver(false)}>
           Restart
-        </Button>}
+        </Button>
+      )}
       {!reset && !isGameOver ? (
-        <Button
-          variant="contained"
-          color="primary"
-          className="reset"
-          onClick={() => setReset(true)}
-        >Reset</Button>) : (<></>)}
+        <Button variant="contained" color="primary" className="reset" onClick={() => setReset(true)}>
+          Reset
+        </Button>
+      ) : (
+        <></>
+      )}
     </Grid>
   );
 };
