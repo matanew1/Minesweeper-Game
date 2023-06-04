@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Typography, Grid } from '@mui/material';
 import Cell from './Cell';
 
@@ -8,17 +8,18 @@ const cellType = {
   REVEALED_CELL: 'r'
 };
 
+const neighbors = [
+  [-1, -1], [-1, 0], [-1, 1],
+  [0, -1],  [0, 0], [0, 1],
+  [1, -1],  [1, 0], [1, 1]
+];
+
 const Board = ({ rows, columns, mines }) => {
   const [cellCounterReveal, setCellCounterReveal] = useState((rows * columns) - mines);
   const [win, setWin] = useState(false);
   const [board, setBoard] = useState([]);
   const [isGameOver, setIsGameOver] = useState(false);
   const [reset, setReset] = useState(true);
-  const neighbors = [
-    [-1, -1], [-1, 0], [-1, 1],
-    [0, -1], [0, 1],
-    [1, -1], [1, 0], [1, 1]
-  ];
 
   const initBoard = (rows, columns, mines) => {
     const initialBoard = Array(rows)
@@ -45,17 +46,22 @@ const Board = ({ rows, columns, mines }) => {
       const [x, y] = neighbors[i];
       const newRow1 = newRow + x;
       const newCol1 = newCol + y;
+      console.log(newRow1, newCol1)
       if (
         newRow1 >= 0 &&
         newRow1 < rows &&
         newCol1 >= 0 &&
         newCol1 < columns &&
-        newBoard[newRow1][newCol1] === cellType.BOMB_CELL
-      ) {
+        newBoard[newRow1][newCol1] === cellType.BOMB_CELL) {
         numBombAround++;
       }
+      console.log('numBombAround', numBombAround)
     }
     return numBombAround;
+  };
+
+  const checkBoundary = (newRow, newCol) => {
+    return newRow >= 0 && newRow < rows && newCol >= 0 && newCol < columns
   };
 
   const revealCell = (row, col) => {
@@ -66,16 +72,13 @@ const Board = ({ rows, columns, mines }) => {
     neighbors.map(([x, y]) => {
       const newRow = row + x;
       const newCol = col + y;
-      if (
-        newRow >= 0 &&
-        newRow < rows &&
-        newCol >= 0 &&
-        newCol < columns &&
-        newBoard[newRow][newCol] === cellType.UNKNOWN_CELL
-      ) {
-        const count = countBombAroundCell(newBoard, newRow, newCol);
-        newBoard[newRow][newCol] = count === 0 ? cellType.REVEALED_CELL : count;
-        remove++;
+      if (checkBoundary(newRow, newCol)) {
+        if (newBoard[newRow][newCol] === cellType.UNKNOWN_CELL) {
+          const count = countBombAroundCell(newBoard, newRow, newCol);
+          console.log(newRow,newCol,'count',count);
+          newBoard[newRow][newCol] = count === 0 ? cellType.REVEALED_CELL : count;
+          remove++;
+        }
       }
       return null; // Returning null to satisfy the map function
     });
@@ -92,10 +95,13 @@ const Board = ({ rows, columns, mines }) => {
     }
   };
 
-  useEffect(() => {
+  const checkWin = useCallback(() => {
     if (cellCounterReveal === 0) {
       setWin(true);
     }
+  }, [cellCounterReveal]);
+
+  const checkResetOrGameOver = useCallback(() => {
     if (isGameOver || reset) {
       initBoard(rows, columns, mines);
       setReset(false);
@@ -103,32 +109,35 @@ const Board = ({ rows, columns, mines }) => {
       setWin(false);
       setCellCounterReveal(rows * columns - mines);
     }
-  }, [cellCounterReveal, columns, isGameOver, mines, reset, rows]);
+  }, [columns, isGameOver, mines, reset, rows]);
+
+  useEffect(() => {
+    checkWin();
+    checkResetOrGameOver();
+  }, [checkResetOrGameOver, checkWin]);
 
   return (
     <Grid container direction="column" justifyContent="center" alignItems="center">
       <Typography variant="h2" className="game-label" fontWeight="bold">
         Minesweeper Game
-      </Typography>
-      <br />
+      </Typography><br />
       {board.map((row, rowIndex) => (
         <Grid container item key={rowIndex} className="table" justifyContent="center" alignItems="center">
           {row.map((cell, colIndex) => (
             <Cell key={colIndex} value={cell} onClick={() => handleCellClick(rowIndex, colIndex)} />
           ))}
         </Grid>
-      ))}
-      <br />
+      ))}<br />
       {win && <Typography className="game-over">You Win!</Typography>}
       {isGameOver && (
         <Typography className="game-over">
           {alert("Game Over")}
         </Typography>
       ) && (
-        <Button variant="contained" color="primary" className="restart" onClick={() => setIsGameOver(false)}>
-          Restart
-        </Button>
-      )}
+          <Button variant="contained" color="primary" className="restart" onClick={() => setIsGameOver(false)}>
+            Restart
+          </Button>
+        )}
       {!reset && !isGameOver ? (
         <Button variant="contained" color="primary" className="reset" onClick={() => setReset(true)}>
           Reset
