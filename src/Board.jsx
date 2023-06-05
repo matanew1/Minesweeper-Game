@@ -3,15 +3,14 @@ import { Button, Typography, Grid } from '@mui/material';
 import Cell from './Cell';
 
 const cellType = {
-  UNKNOWN_CELL: 'c',
-  BOMB_CELL: 'b',
-  REVEALED_CELL: 'r'
+  UNKNOWN_CELL: -1,
+  BOMB_CELL: -2
 };
 
 const neighbors = [
   [-1, -1], [-1, 0], [-1, 1],
-  [0, -1],  [0, 0], [0, 1],
-  [1, -1],  [1, 0], [1, 1]
+  [0, -1], [0, 1],
+  [1, -1], [1, 0], [1, 1]
 ];
 
 const Board = ({ rows, columns, mines }) => {
@@ -46,7 +45,6 @@ const Board = ({ rows, columns, mines }) => {
       const [x, y] = neighbors[i];
       const newRow1 = newRow + x;
       const newCol1 = newCol + y;
-      console.log(newRow1, newCol1)
       if (
         newRow1 >= 0 &&
         newRow1 < rows &&
@@ -55,7 +53,6 @@ const Board = ({ rows, columns, mines }) => {
         newBoard[newRow1][newCol1] === cellType.BOMB_CELL) {
         numBombAround++;
       }
-      console.log('numBombAround', numBombAround)
     }
     return numBombAround;
   };
@@ -66,17 +63,19 @@ const Board = ({ rows, columns, mines }) => {
 
   const revealCell = (row, col) => {
     const newBoard = [...board];
-    newBoard[row][col] = cellType.REVEALED_CELL;
+    newBoard[row][col] = 0;
     let remove = 1;
 
     neighbors.map(([x, y]) => {
       const newRow = row + x;
       const newCol = col + y;
       if (checkBoundary(newRow, newCol)) {
-        if (newBoard[newRow][newCol] === cellType.UNKNOWN_CELL) {
+        if (newBoard[newRow][newCol] === cellType.BOMB_CELL) {
+          newBoard[row][col]++;
+        }
+        else if(newBoard[newRow][newCol] === cellType.UNKNOWN_CELL){
           const count = countBombAroundCell(newBoard, newRow, newCol);
-          console.log(newRow,newCol,'count',count);
-          newBoard[newRow][newCol] = count === 0 ? cellType.REVEALED_CELL : count;
+          newBoard[newRow][newCol] = count;
           remove++;
         }
       }
@@ -118,33 +117,26 @@ const Board = ({ rows, columns, mines }) => {
 
   return (
     <Grid container direction="column" justifyContent="center" alignItems="center">
-      <Typography variant="h2" className="game-label" fontWeight="bold">
+      <Typography variant="h2" className="game-label" fontWeight="bold" disable={win}>
         Minesweeper Game
       </Typography><br />
       {board.map((row, rowIndex) => (
         <Grid container item key={rowIndex} className="table" justifyContent="center" alignItems="center">
           {row.map((cell, colIndex) => (
-            <Cell key={colIndex} value={cell} onClick={() => handleCellClick(rowIndex, colIndex)} />
+            <Cell key={colIndex} value={cell} win={win} onClick={() => handleCellClick(rowIndex, colIndex)} />
           ))}
         </Grid>
       ))}<br />
       {win && <Typography className="game-over">You Win!</Typography>}
-      {isGameOver && (
-        <Typography className="game-over">
-          {alert("Game Over")}
-        </Typography>
-      ) && (
-          <Button variant="contained" color="primary" className="restart" onClick={() => setIsGameOver(false)}>
-            Restart
-          </Button>
-        )}
-      {!reset && !isGameOver ? (
-        <Button variant="contained" color="primary" className="reset" onClick={() => setReset(true)}>
-          Reset
+      {isGameOver && (<Typography className="game-over">{alert("Game Over")}</Typography>) && (
+        <Button variant="contained" color="primary" onClick={() => setIsGameOver(false)}>
+          Restart
         </Button>
-      ) : (
-        <></>
       )}
+      {!reset && !isGameOver ? (<Button variant="contained" color="primary" onClick={() => setReset(true)}>
+          Reset
+        </Button>) : (<></>)
+      }
     </Grid>
   );
 };
