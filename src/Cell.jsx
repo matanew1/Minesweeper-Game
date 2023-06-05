@@ -14,7 +14,7 @@ const Cell = ({ value, onClick, win }) => {
             >
                 <Box display="flex" justifyContent="center" alignItems="center" height={50}>
                     <span style={{ fontSize: '1.5rem' }}>
-                        {value >= 0 ? (value) : ('💀')}
+                        {value > 0 ? (value) : (value === 0 ? (''):('💀'))}
                     </span>
                 </Box>
             </Button>

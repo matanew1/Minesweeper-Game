@@ -66,21 +66,27 @@ const Board = ({ rows, columns, mines }) => {
     newBoard[row][col] = 0;
     let remove = 1;
 
-    neighbors.map(([x, y]) => {
-      const newRow = row + x;
-      const newCol = col + y;
-      if (checkBoundary(newRow, newCol)) {
-        if (newBoard[newRow][newCol] === cellType.BOMB_CELL) {
-          newBoard[row][col]++;
+    const getNeighbors = (row, col) => {
+      neighbors.map(([x, y]) => {
+        const newRow = row + x;
+        const newCol = col + y;
+        if (checkBoundary(newRow, newCol)) {
+          if (newBoard[newRow][newCol] === cellType.BOMB_CELL) {
+            newBoard[row][col]++;
+          }
+          else if(newBoard[newRow][newCol] === cellType.UNKNOWN_CELL) {
+            const count = countBombAroundCell(newBoard, newRow, newCol);
+            newBoard[newRow][newCol] = count;
+            if(count === 0) {
+              getNeighbors(newRow, newCol);
+            }
+            remove++;
+          }
         }
-        else if(newBoard[newRow][newCol] === cellType.UNKNOWN_CELL){
-          const count = countBombAroundCell(newBoard, newRow, newCol);
-          newBoard[newRow][newCol] = count;
-          remove++;
-        }
-      }
-      return null; // Returning null to satisfy the map function
-    });
+        return null; // Returning null to satisfy the map function
+      });
+    }
+    getNeighbors(row, col);
     setCellCounterReveal(cellCounterReveal - remove);
     setBoard(newBoard);
   };
@@ -117,7 +123,7 @@ const Board = ({ rows, columns, mines }) => {
 
   return (
     <Grid container direction="column" justifyContent="center" alignItems="center">
-      <Typography variant="h2" className="game-label" fontWeight="bold" disable={win}>
+      <Typography variant="h2" className="game-label" fontWeight="bold">
         Minesweeper Game
       </Typography><br />
       {board.map((row, rowIndex) => (
