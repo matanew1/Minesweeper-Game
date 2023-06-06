@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Button, Typography, Grid, Badge } from '@mui/material';
+import { Button, Typography, Grid } from '@mui/material';
 import Cell from './Cell';
 
 const cellType = {
@@ -75,10 +75,10 @@ const Board = ({ rows, columns, mines }) => {
           if (newBoard[newRow][newCol] === cellType.BOMB_CELL || newBoard[newRow][newCol] === cellType.EXPOSED_BOMB_CELL) {
             newBoard[row][col]++;
           }
-          else if(newBoard[newRow][newCol] === cellType.UNKNOWN_CELL) {
+          else if (newBoard[newRow][newCol] === cellType.UNKNOWN_CELL) {
             const count = countBombAroundCell(newBoard, newRow, newCol);
             newBoard[newRow][newCol] = count;
-            if(count === 0) {
+            if (count === 0) {
               getNeighbors(newRow, newCol);
             }
             remove++;
@@ -134,9 +134,9 @@ const Board = ({ rows, columns, mines }) => {
   };
 
   const hint = () => {
-    if( numHints > 0 ) {
+    if (numHints > 0) {
       const [x, y] = findRandomBomb();
-      if (x!== -1 && y!== -1) {
+      if (x !== -1 && y !== -1) {
         const newBoard = [...board];
         newBoard[x][y] = cellType.EXPOSED_BOMB_CELL
         setBoard(newBoard);
@@ -144,18 +144,16 @@ const Board = ({ rows, columns, mines }) => {
       }
     }
     else {
-        alert('Now more hints left !');
+      alert('Now more hints left !');
     }
-    
+
   };
 
   return (
-    <Grid container direction="column" justifyContent="center" alignItems="center">
+    <Grid container direction="column" justifyContent="center" alignItems="center" gap="2px" alignContent="center">
       <Typography variant="h2" className="game-label" fontWeight="bold">
         Minesweeper
       </Typography><br />
-
-      <Button onClick={hint}><Badge>{numHints} HINT REMAINED</Badge></Button>
       {board.map((row, rowIndex) => (
         <Grid container item key={rowIndex} className="table" justifyContent="center" alignItems="center">
           {row.map((cell, colIndex) => (
@@ -169,10 +167,15 @@ const Board = ({ rows, columns, mines }) => {
           Restart
         </Button>
       )}
-      {!reset && !isGameOver ? (<Button variant="contained" color="primary" onClick={() => setReset(true)}>
+      <span>
+        {!reset && !isGameOver ? (<Button variant="contained" color="primary" onClick={() => setReset(true)}>
           Reset
         </Button>) : (<></>)
-      }
+        }&nbsp;&nbsp;&nbsp;
+        <Button style={{ backgroundColor: "lightblue" }} onClick={hint} color='info'>
+        <strong>{numHints}&nbsp;HINT&nbsp;REMAINED</strong>
+        </Button>
+      </span>
     </Grid>
   );
 };
